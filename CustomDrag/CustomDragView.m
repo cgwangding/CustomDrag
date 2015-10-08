@@ -12,6 +12,8 @@
 
 @property (assign, nonatomic) BOOL canDrag;
 
+@property (strong, nonatomic) UITapGestureRecognizer *tagGesture;
+
 @property (strong, nonatomic) UILongPressGestureRecognizer *dragLongPress;
 
 @property (strong, nonatomic) UIPanGestureRecognizer *panGesture;
@@ -70,6 +72,7 @@
         self.itemSize  = CGSizeMake(( CGRectGetWidth(self.frame) - (self.lineOfItemCount - 1) * self.itemSpacing - self.contentEdgeInsets.left - self.contentEdgeInsets.right) / self.lineOfItemCount ,( CGRectGetWidth(self.frame) - (self.lineOfItemCount - 1) * self.itemSpacing - self.contentEdgeInsets.left - self.contentEdgeInsets.right) / self.lineOfItemCount);
         [self addGestureRecognizer:self.dragLongPress];
         [self addGestureRecognizer:self.panGesture];
+        [self addGestureRecognizer:self.tagGesture];
         
         [self buildUI];
     }
@@ -85,15 +88,43 @@
     }else{
         row = self.muItemsArr.count / self.lineOfItemCount + 1;
     }
+    BOOL shouldShowDeleteState = NO;
     for (int i = 0; i < row ; i ++) {
         for (int j = 0; j < self.lineOfItemCount ; j++) {
+            if (i * self.lineOfItemCount + j == self.muItemsArr.count) {
+                break;
+            }
             UIView *item = self.muItemsArr[i * self.lineOfItemCount + j];
             
             [item setFrame:CGRectMake((self.itemSpacing + self.itemSize.width) * j + self.contentEdgeInsets.left, (self.lineSpacing + self.itemSize.height) * i + self.contentEdgeInsets.top, self.itemSize.width, self.itemSize.height)];
+            
+            if ([item isKindOfClass:[CustomItem class]]) {
+                CustomItem *cusItem = (CustomItem*)item;
+                [cusItem addTarget:self action:@selector(buttonClicked:) forControlEvents:UIControlEventTouchUpInside];
+                if (i == 0 && j == 0) {
+                    if (cusItem.showingDeleteState == YES) {
+                        shouldShowDeleteState = YES;
+                    }
+                }
+                if (shouldShowDeleteState == YES) {
+                    [cusItem visibleDeleteButton];
+                }
+            }
+            
             [item setNeedsLayout];
             [self addSubview:item];
         }
     }
+}
+
+#pragma mark - Public method 
+
+- (void)endDeleting
+{
+    for (CustomItem *item in self.muItemsArr) {
+        [item invisibleDeleteButton];
+    }
+    self.canDrag = NO;
 }
 
 - (void)reloadData
@@ -103,6 +134,22 @@
     [self setNeedsDisplay];
 }
 
+
+#pragma mark - button action
+
+- (void)buttonClicked:(CustomItem*)item
+{
+    if (item.showingDeleteState == YES) {
+        [self.muItemsArr removeObject:item];
+        NSLog(@"删除了>>>%@",item.currentTitle);
+        [self reloadData];
+    }
+    if ([self.delegate respondsToSelector:@selector(customDragView:didClickedItem:withItemState:)]) {
+        [self.delegate customDragView:self didClickedItem:item withItemState:item.showingDeleteState];
+    }
+}
+
+#pragma mark - core method for move the item
 /**
  *  核心方法，用于实现item的移动
  */
@@ -241,7 +288,7 @@
 - (void)disableAllItem
 {
     for (UIView *item in self.muItemsArr) {
-        item.userInteractionEnabled = NO;
+//        item.userInteractionEnabled = NO;
         if ([item isKindOfClass:[CustomItem class]]) {
             CustomItem *cusItem = (CustomItem*)item;
             [cusItem visibleDeleteButton];
@@ -252,10 +299,7 @@
 
 - (void)enablAllItem
 {
-    for (UIView *item in self.muItemsArr) {
-        item.userInteractionEnabled = YES;
         self.isEditingMode = NO;
-    }
 }
 
 
@@ -280,6 +324,7 @@
     self.currentTouchedItem.frame = self.currentTouchedItemOriginalFrame;
     self.currentTouchedItem = nil;
     [self enablAllItem];
+    [item setNeedsLayout];
 }
 
 #pragma mark - gettter
@@ -315,12 +360,22 @@
 
 - (void)setItems:(NSArray *)items
 {
+    [self.muItemsArr removeAllObjects];
     [self.muItemsArr addObjectsFromArray:items];
 }
 
 - (NSArray *)items
 {
     return [NSArray arrayWithArray:self.muItemsArr];
+}
+
+- (UITapGestureRecognizer *)tagGesture
+{
+    if (_tagGesture == nil) {
+        _tagGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(endDeleting)];
+        
+    }
+    return _tagGesture;
 }
 
 @end

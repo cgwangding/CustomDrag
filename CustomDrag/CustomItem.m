@@ -10,6 +10,7 @@
 
 @implementation CustomItem
 
+
 /*
 // Only override drawRect: if you perform custom drawing.
 // An empty implementation adversely affects performance during animation.
@@ -21,9 +22,17 @@
 - (void)layoutSubviews
 {
     [super layoutSubviews];
-    [self.deleteButton setFrame:CGRectMake(0, 0, 20, 20)];
+    [self.deleteButton setFrame:CGRectMake(CGRectGetWidth(self.frame) - 20, 0, 20, 20)];
     [self addSubview:self.deleteButton];
+    self.imageView.frame = CGRectMake(0, 0, 40, 40);
+    self.imageView.center = CGPointMake(self.center.x, self.center.y - self.center.y / 4);
+    self.imageView.backgroundColor = [UIColor greenColor];
+    self.imageView.layer.cornerRadius = 20;
+    self.imageView.layer.masksToBounds = YES;
     
+    self.titleLabel.frame = CGRectMake(0, CGRectGetHeight(self.frame) - 15, CGRectGetWidth(self.frame), 15);
+    self.titleLabel.backgroundColor = [UIColor purpleColor];
+    self.titleLabel.textAlignment = NSTextAlignmentCenter;
 }
 
 - (void)deleteButtonClicked:(UIButton*)button
@@ -36,11 +45,14 @@
 - (void)visibleDeleteButton
 {
     self.deleteButton.hidden = NO;
+    self.showingDeleteState = YES;
 }
+
 
 - (void)invisibleDeleteButton
 {
     self.deleteButton.hidden = YES;
+    self.showingDeleteState = NO;
 }
 
 - (UIButton *)deleteButton
@@ -53,5 +65,6 @@
     }
     return _deleteButton;
 }
+
 
 @end

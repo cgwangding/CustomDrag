@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "CustomItem.h"
 
+@protocol CustomDragViewDelegate;
 
 @interface CustomDragView : UIView
 
@@ -21,6 +22,8 @@
  *  @return instantiation object
  */
 - (instancetype)initWithFrame:(CGRect)frame andItems:(NSArray*)items;
+
+@property (nonatomic, weak) id<CustomDragViewDelegate>delegate;
 
 /**
  * 数据源,当你需要改变数据源时，必须调用reloadData方法，直接改变数据源并不会有什么效果
@@ -54,5 +57,25 @@
 
 //当数据源更新时调用这个方法
 - (void)reloadData;
+
+//结束删除状态
+- (void)endDeleting;
+
+@end
+
+@protocol CustomDragViewDelegate <NSObject>
+
+@optional
+
+/**
+ *  当item上有点击操作时将会触发这个代理
+ *
+ *  @param dragView        当前的item的父视图
+ *  @param item            当前触发点击事件的按钮
+ *  @param isDeletingState 按钮所在的编辑状态，为NO时为普通状态，需要判断该状态分情况处理
+ */
+- (void)customDragView:(CustomDragView*)dragView didClickedItem:(CustomItem*)item withItemState:(BOOL)isDeletingState;
+
+
 
 @end

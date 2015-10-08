@@ -17,10 +17,15 @@
 
 @end
 
+
 @interface CustomItem : UIButton
 
 @property (nonatomic, weak) id<CustomItemDelegate>delegate;
 
+/**
+ *  不需要主动设置该状态
+ */
+@property (nonatomic, assign) BOOL showingDeleteState;
 /**
  *  use this property to keep relationship with some info 
  */
@@ -28,6 +33,7 @@
 
 @property (nonatomic, strong) UIButton *deleteButton;
 
+//使用下面两个方法使button进入编辑状态
 - (void)visibleDeleteButton;
 - (void)invisibleDeleteButton;
 
